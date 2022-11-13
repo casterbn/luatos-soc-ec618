@@ -1,0 +1,124 @@
+#! armcc -E
+#include "..\..\common\inc\mem_map.h"
+
+LR_CPIROM1 0x00800000 0x80000  {    ; load region size_region
+  UNLOAD_CPVECTOR 0x00800000 0x80000{
+    *.o (RESET, +First)
+    *(.phyCodeFlash_ICS)
+    *(.phyCodeFlash_UL)
+    *(.phyCodeFlash_RXDFE)
+    *(.phyCodeFlash_CE)
+    *(.phyCodeFlash_AXC)
+    *(.phyCodeFlash_RF)
+    *(.phyCodeFlash_ASN1)
+    *(.phyCodeFlash_SCHD)
+    *(.phyCodeFlash_MACSF)
+    *(.phyCodeFlash_MEAS)
+    *(.phyCodeFlash_PMU)
+    *(.phyCodeFlash_CCH)
+    *(.phyCodeFlash_CSI)
+    *(.phyCodeFlash_DCH)
+    *(.phyCodeFlash_DEC)
+    *(.phyCodeFlash_HARQ)
+    *(.phyCodeFlash_TMU)
+    *(.phyCodeFlash_COMN)
+    *(.cpPlatCodeFlash)
+    *(.phyDataFlash_Const)
+    .ANY (+RO)
+  }
+  LOAD_CP_PIRAM_CSMB 0x20  {  ; code in ram
+  *(.phyCodeCsmb_ICS)
+  *(.phyCodeCsmb_RXDFE)
+  *(.phyCodeCsmb_CE)
+  *(.phyCodeCsmb_AXC)
+  *(.phyCodeCsmb_RF)
+  *(.phyCodeCsmb_SCHD)
+  *(.phyCodeCsmb_MACSF)
+  *(.phyCodeCsmb_MEAS)
+  *(.phyCodeCsmb_PMU)
+  *(.phyCodeCsmb_CCH)
+  *(.phyCodeCsmb_DCH)
+  *(.phyCodeCsmb_DEC)
+  *(.phyCodeCsmb_HARQ)
+  *(.phyCodeCsmb_TMU)
+  *(.phyCodeCsmb_COMN)
+  *(.cpPlatCodeCsmb)
+  *(.phyDataCsmb_Const)
+  }
+  LOAD_CP_FIRAM_CSMB +0  {  ; code for full image, but placed on csmb
+
+  }
+	
+  UNLOAD_CPCSMBDATA 0xe000 {
+  *(.phyDataCsmb_Slp2)
+  }
+  UNLOAD_CPAONMEM 0xf000 {
+  *(.phyDataCsmb_AonMemBackup)
+  }
+  LOAD_CP_PIRAM_MSMB MSMB_APMEM_END_ADDR  {  ; start from APMEM END
+  *(.phyCodeMsmb_SLP2)
+  *(.recordNodeRO)
+  }
+  LOAD_CP_FIRAM_MSMB +0 {
+   *(.phyFMRamcode)
+   *(.phyCodeMsmb_ICS)
+   *(.phyCodeMsmb_UL)
+   *(.phyCodeMsmb_RXDFE)
+   *(.phyCodeMsmb_CE)
+   *(.phyCodeMsmb_AXC)
+   *(.phyCodeMsmb_RF)
+   *(.phyCodeMsmb_SCHD)
+   *(.phyCodeMsmb_MACSF)
+   *(.phyCodeMsmb_MEAS)
+   *(.phyCodeMsmb_PMU)
+   *(.phyCodeMsmb_CCH)
+   *(.phyCodeMsmb_CSI)
+   *(.phyCodeMsmb_DCH)
+   *(.phyCodeMsmb_DEC)
+   *(.phyCodeMsmb_HARQ)
+   *(.phyCodeMsmb_TMU)
+   *(.phyCodeMsmb_COMN)
+   *(.cpPlatCodeMsmb)
+  }
+  LOAD_CPOS_IRAM +0 {
+  event_groups.o(+RO)
+  heap_6.o(+RO)
+  tlsf.o(+RO)
+  mm_debug.o(+RO)
+  list.o(+RO)
+  queue.o(+RO)
+  tasks.o(+RO)
+  timers.o(+RO)
+  port.o(+RO)
+  port_asm.o(+RO)
+  cmsis_os2.o(+RO)
+  }
+  UNLOAD_SLPMEM +0 {
+  *(.sleepmem)
+  }
+  LOAD_CPDRAM_SHARED +0  {  ; RW data
+  .ANY (+RW +ZI)
+  }
+  NOINIT_CPDATA +0 { ; data initialize by phy code, plat do not initialize this area
+  *(.phyDataMsmb)
+  }
+  LOAD_CPDRAM_BSP +0 {	; add driver need run in cp smallimg
+  gpr.o(+RW +ZI)
+  clock.o(+RW +ZI)
+  cpmu.o(+RW +ZI)
+  cp_main.o(+RW +ZI)
+  slpman.o(+RW +ZI)
+  *(.recordNodeZI)
+  }
+
+  ScatterAssert(ImageLimit(LOAD_CPDRAM_BSP) <= CP_AONMEMBACKUP_START_ADDR)
+  UNLOAD_CPAON CP_AONMEMBACKUP_START_ADDR {
+  *.o (.phyDataMsmb_AonMemBackup)
+  }
+  LOAD_XP_SHAREDINFO XP_SHAREINFO_BASE_ADDR {
+  *.o (.shareInfo)
+  }
+  UNLOAD_XP_IPCMEM IPC_SHAREDMEM_START_ADDR EMPTY 0x1000{
+  
+  }
+}

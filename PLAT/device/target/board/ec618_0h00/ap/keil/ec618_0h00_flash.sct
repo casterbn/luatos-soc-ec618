@@ -1,0 +1,114 @@
+#! armcc -E
+#include "..\..\common\inc\mem_map.h"
+
+LR_IROM1 AP_FLASH_LOAD_ADDR AP_FLASH_LOAD_SIZE  {    ; ap 2.5MB flash code
+  UNLOAD_IROM AP_FLASH_LOAD_ADDR AP_FLASH_LOAD_SIZE  {  ; load address = execution address
+   *.o (RESET, +First)
+   .ANY (+RO)
+  }
+  UNLOAD_NOCACHE +0 ALIGN 128{
+  cache*.o (+RO)
+  }
+  
+  ; asmb define start
+  LOAD_BOOTCODE ASMB_START_ADDR  {  ; code in ram
+    *.o (.mcuVector, +First)
+    *.o (.ramBootCode)
+    qspi.o(+RO)
+    flash.o(+RO)
+  }
+
+  LOAD_AP_PIRAM_ASMB ASMB_IRAM_START_ADDR { ; for ap paging image, placed in asmb
+   *.o (.psPARamcode)
+   *.o (.platPARamcode)
+  }
+  LOAD_AP_FIRAM_ASMB +0 { ; for ap full image code, but placed in asmb
+   *.o (.psFARamcode)
+   *.o (.platFARamcode)
+  }
+  LOAD_AP_DATA_ASMB +0 {
+   *.o (.asmbRWData)
+   *.o (.asmbZIData)
+  }
+  LOAD_RRCMEM ASMB_RRCMEM_START_ADDR {  ; rrcMem
+  *.o (.rrcMem)
+  }
+  LOAD_FLASHMEM ASMB_FLASHMEM_START_ADDR {  ; apFlashMem
+  *.o (.apFlashMem)
+  }
+  ; msmb define start
+  LOAD_AP_PIRAM_MSMB MSMB_START_ADDR {  ; for ap paging image, placed in msmb
+  *.o (.psPMRamcode) 
+  *.o (.platPMRamcode) 
+  *.o (.platPMRamcodeFCLK)
+  *.o (.recordNodeRO)
+  }
+  LOAD_AP_FIRAM_MSMB +0 {  ; for ap full image, placed in msmb
+  *.o (.ramCode2)
+  *.o (.upRamCode) 
+  *.o (.psFMRamcode) 
+  *.o (.platFMRamcode) 
+  }
+  LOAD_APOS +0 {
+  event_groups.o(+RO)
+  heap_6.o(+RO)
+  tlsf.o(+RO)
+  list.o(+RO)
+  queue.o(+RO)
+  tasks.o(+RO)
+  timers.o(+RO)
+  port.o(+RO)
+  port_asm.o(+RO)
+  cmsis_os2.o(+RO)
+  }
+  LOAD_DRAM_BSP +0 {
+  bsp_spi.o(+RW +ZI)
+;  cache.o(+RW +ZI)
+  flash.o(+RW +ZI)
+  flash_rt.o(+RW +ZI)
+;  qspi.o(+RW +ZI)
+;  gpio.o(+RW +ZI)
+  gpr.o(+RW +ZI)
+  apmu.o(+RW +ZI)
+  bsp.o(+RW +ZI)
+  plat_config.o(+RW +ZI)
+  system_ec618.o(+RW +ZI)
+  unilog.o(+RW +ZI)
+  pad.o(+RW +ZI)
+  ic.o(+RW +ZI)
+  ec_main.o(+RW +ZI)
+  slpman.o(+RW +ZI)
+  bsp_usart.o(+RW +ZI)
+  bsp_lpusart.o(+RW +ZI)
+  timer.o(+RW +ZI)
+  dma.o(+RW +ZI)
+  adc.o(+RW +ZI)  
+  wdt.o(+RW +ZI)
+  usb_device.o(+RW +ZI)
+  uart_device.o(+RW +ZI)
+  clock.o(+RW +ZI)
+  hal_trim.o(+ZI)
+  hal_adcproxy.o(+RW +ZI)
+  *(.recordNodeZI)
+  }
+  UNLOAD_SLPMEM +0 {
+  *.o(.sleepmem)
+  }
+  LOAD_DRAM_SHARED +0  {  ; ap 256KB sram code
+  .ANY (+RW +ZI)
+  }
+  LOAD_UP_BUFFER +0  {	  ;ALIGN 131072{
+  *(.catUpBuffer)
+  *(.catUpMem)
+  }
+  ScatterAssert(ImageLimit(LOAD_UP_BUFFER) <= MSMB_APMEM_END_ADDR)
+  UNLOAD_CPAON CP_AONMEMBACKUP_START_ADDR EMPTY 0x1000{
+  
+  }
+  LOAD_XP_SHAREDINFO XP_SHAREINFO_BASE_ADDR {
+  *.o (.shareInfo)
+  }
+  UNLOAD_XP_IPCMEM IPC_SHAREDMEM_START_ADDR EMPTY 0x1000{
+  
+  }
+}

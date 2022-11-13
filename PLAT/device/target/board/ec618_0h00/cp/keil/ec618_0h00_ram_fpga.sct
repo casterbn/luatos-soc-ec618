@@ -1,0 +1,63 @@
+#! armcc -E
+#include "mem_map.h"
+
+LR_CPIROM1 0x480000 0x60000  {    ; load region size_region
+  
+  LOAD_CPVECTOR 0x480000 0x60000{
+    *.o (RESET, +First)
+  }
+  UNLOAD_CPIROM +0  {  ; load address = execution address
+   *(.phyCodeFlash_COMN)
+   *(.phyCodeFlash_ICS)
+   *(.phyCodeFlash_UL)
+   *(.phyCodeFlash_RXDFE)
+   *(.phyCodeFlash_CE)
+   *(.phyCodeFlash_DE)
+   *(.phyCodeFlash_AXC)
+   *(.phyCodeFlash_RF)
+   *(.phyCodeFlash_ASN1)
+   *(.phyCodeFlash_SCHD)
+   *(.phyCodeFlash_MACSF)
+   *(.phyCodeFlash_MEAS)
+   *(.phyCodeFlash_PMU)
+   *(.phyCodeFlash_OTDOA)
+   .(.phyCodeFlash_SQ)
+   *(.phyDataFlash)
+   *(.phyCodeMsmb0)
+   *(.phyCodeMsmb1)
+   .ANY (+RO)
+  }
+
+  LOAD_CPIRAM1 +0  {  ; code in ram
+  *(.phyCodeCsmb0)
+  *(.ramCode)
+  }
+  LOAD_CPIRAM2 +0  {  ; code in ram
+  *(.phyCodeCsmb1)
+  *(.ramCode2)
+  }
+  LOAD_CPOS_IRAM +0 {
+  event_groups.o(+RO)
+  heap_4.o(+RO)
+  list.o(+RO)
+  queue.o(+RO)
+  tasks.o(+RO)
+  timers.o(+RO)
+  port.o(+RO)
+  port_asm.o(+RO)
+  cmsis_os2.o(+RO)
+  }
+  
+  
+  LOAD_CPDRAM_SHARED 0x4E0000 0x20000  {  ; RW data
+  *(.phyDataZI)
+  .ANY (+RW +ZI)
+  }
+  LOAD_DRAM_BSP +0 {	; add driver need run in cp smallimg
+
+  }
+ 
+  UNLOAD_DBGDATA_AREA 0x500000 0x40000	{ ; phyDebug Area
+  
+  }
+}
